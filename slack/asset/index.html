@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <title>pesu</title>
+    </head>
+    <body>
+        <label for="userName">Username:</label>
+        <input type="text" id="userName" name="userName">
+        <input type="submit" value="Submit" onclick="getUserInput()">
+    </body>
+    <script>
+       async function getUserInput() {
+        const username = document.getElementById("userName").value;
+        console.log("userName:", username);
+        const api = "/createUser/"+username
+        try {
+                console.log("going to call api!!")
+                const response = await fetch(api, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                console.log("error would come since response might not be resolved!!")
+                // console.log(response)
+                // console.log(response.json())
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log("nothing came since we didn't await")
+                console.log(data);
+                const userId = data.id;
+                const userName = data.userName;
+                console.log(userId,userName);
+                // Navigate to the message page with user ID
+                window.location.href = `/message.html?userName=${userName}&userId=${userId}`;
+                // startHearbeat(userId)
+
+            } catch (error) {
+                console.error('Error during registration:', error);
+                alert('Registration failed. Please try again.');
+            }
+    }
+    </script>
+</html>

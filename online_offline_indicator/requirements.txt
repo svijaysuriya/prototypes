@@ -1,0 +1,13 @@
+there will be many users
+determine whether they are in online or offline
+
+push based model / pull based model
+
+here client should notify the server via a heartbeat instead of server polling 
+why? server doesn't need to know the ip's of client, need not send the heartbeats to offline users => saves n/w calls and bandwith
+
+what every user must send and what must be stored?
+
+user_id | last_timestamp
+
+if the lastimestamp is within 10 seconds, then we could say that the user is online else offline

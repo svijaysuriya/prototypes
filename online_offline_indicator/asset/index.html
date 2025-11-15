@@ -1,0 +1,27 @@
+A simple asset/index.html would look something like this:
+<html>
+<head>
+  <title>Socket.IO Test</title>
+  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+</head>
+<body>
+  <h1>Socket.IO Heartbeat Test</h1>
+  <script>
+    var socket = io('http://localhost:8000'); //Connects to the default namespace
+    socket.on('connect', function() {
+      console.log('Client connected!');
+      simulatehb = setInterval(()=>{
+        socket.emit('hearbeat', 'hb');
+        console.log('🚀 hearbeat - hb');
+      },10000);
+      console.log(simulatehb);
+     
+    });
+    socket.on('disconnect', function(reason) {
+      console.log('Client disconnected. Reason:', reason);
+    });
+  </script>
+</body>
+</html>
+
+// 7:48

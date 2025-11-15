@@ -1,0 +1,29 @@
+# filippo.io/edwards25519 v1.1.0
+## explicit; go 1.20
+filippo.io/edwards25519
+filippo.io/edwards25519/field
+# github.com/go-sql-driver/mysql v1.9.3
+## explicit; go 1.21.0
+github.com/go-sql-driver/mysql
+# github.com/gofrs/uuid v4.0.0+incompatible
+## explicit
+github.com/gofrs/uuid
+# github.com/gomodule/redigo v1.8.4
+## explicit; go 1.14
+github.com/gomodule/redigo/redis
+# github.com/googollee/go-socket.io v1.7.0
+## explicit; go 1.16
+github.com/googollee/go-socket.io
+github.com/googollee/go-socket.io/engineio
+github.com/googollee/go-socket.io/engineio/frame
+github.com/googollee/go-socket.io/engineio/packet
+github.com/googollee/go-socket.io/engineio/payload
+github.com/googollee/go-socket.io/engineio/session
+github.com/googollee/go-socket.io/engineio/transport
+github.com/googollee/go-socket.io/engineio/transport/polling
+github.com/googollee/go-socket.io/engineio/transport/utils
+github.com/googollee/go-socket.io/engineio/transport/websocket
+github.com/googollee/go-socket.io/parser
+# github.com/gorilla/websocket v1.4.2
+## explicit; go 1.12
+github.com/gorilla/websocket

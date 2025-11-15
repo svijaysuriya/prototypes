@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Page</title>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <style>
+    select {
+      padding: 6px;
+      font-size: 16px;
+    }
+    option.online {
+      color: green;
+      font-weight: bold;
+    }
+    option.offline {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+    <h1>Welcome!</h1>
+    <p id="welcomeMessage"></p>
+     <h3>Select a user:</h3>
+
+  <select id="userDropdown" onchange="handleSelection()">
+    <option value="">-- Loading users... --</option>
+  </select>
+  <br>
+    <label for="messageInput">Your Message:</label>
+    <input type="text" id="messageInput" placeholder="Type your message here...">
+    <button onclick="sendMessage()">send</button>
+
+    <h3>Channel Messages</h3>
+    <ul id="messages" style="list-style:none; padding:0; margin:0;"></ul>
+
+    <script>
+        var channelIdObj;
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('userName');
+        const userId = urlParams.get('userId');
+
+        if (userName) {
+            document.getElementById('welcomeMessage').textContent = `User Name: ${userName}`;
+        } else {
+            document.getElementById('welcomeMessage').textContent = 'User Name not found.';
+        }
+
+        var socket = io('https://bb98b9c488b7.ngrok-free.app/'); //Connects to the default namespace
+        socket.on('connect', function() {
+            console.log('Client connected!');
+            socket.emit('hearbeat', userId+","+userName);
+            simulatehb = setInterval(()=>{
+                socket.emit('hearbeat', userId+","+userName);
+                console.log('🚀 hearbeat ',userId);
+            },10000);
+            console.log("connected with web socket server on port 4444");
+            // console.log(simulatehb);
+        });
+        socket.on("realtime", (msg) => {
+            // const str = "sender:message";
+            // const parts = str.split(":");
+
+            addMessageToUI(msg);
+        });
+        socket.on('disconnect', function(reason) {
+        console.log('Client disconnected. Reason:', reason);
+        });
+        
+        async function loadDropdown() {
+        try {
+            const selectedUser = document.getElementById("userDropdown").value;
+
+            // Simulate API call — replace with your API URL
+            const response = await fetch('https://bb98b9c488b7.ngrok-free.app/status');
+            const data = await response.json();
+
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.innerHTML = '<option value="">-- Select a user --</option>';
+
+            // Loop through keys (skip BeActive if it’s not a user)
+            Object.entries(data).forEach(([name, online]) => {
+            if (name === userName) return;
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name + (online ? " (Online)" : " (Offline)");
+            option.className = online ? 'online' : 'offline';
+            dropdown.appendChild(option);
+            });
+
+            // update dropdown options here
+            document.getElementById("userDropdown").value = selectedUser;
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+        }
+
+        function handleSelection() {
+            const dropdown = document.getElementById('userDropdown');
+            const selectedUser = dropdown.value;
+            if (selectedUser) {
+                console.log('Selected user:', selectedUser);
+                myFunction(selectedUser);
+            }
+            loadDropdown();
+    }
+
+    // Helper: safe timestamp formatter
+    function formatTimestamp(ts) {
+    // Accept string, number, or Date. Return simple readable string or empty.
+    if (!ts) return ""; // null/undefined/empty
+    // Treat zero-value timestamps (e.g. "0001-01-01T00:00:00Z") as empty
+    if (typeof ts === "string" && /^0{4}-0{2}-0{2}T0{2}:0{2}:0{2}Z$/.test(ts)) return "";
+
+    const date = (ts instanceof Date) ? ts : new Date(ts);
+    if (Number.isNaN(date.getTime())) return ""; // invalid date
+    // Keep it simple: show local date + short time
+    return date.toLocaleString(); // or use date.toLocaleTimeString() to show only time
+    }
+
+
+    function addMessageToUI(msg) {
+        const container = document.getElementById("messages");
+        if (!container) return;
+
+        const li = document.createElement("li");
+
+        const text = document.createElement("div");
+        text.textContent = msg || "";
+        text.style.marginBottom = "6px";
+
+        li.appendChild(text);
+
+        // append at the end (use container.prepend(li) if you want newest first)
+        container.appendChild(li);
+    }
+
+
+    async function sendMessage(){
+        const input = document.getElementById('messageInput');
+        const msg = input.value.trim()
+        if( channelIdObj == null){
+            alert(`select a user to send msg`);
+            return;
+        }
+        if(msg == null ){
+            alert(`enter msg for: ${username}`);
+            return;
+        }
+        console.log("msg = ",JSON.stringify({"msg": msg}));
+        const sendMessageApi = "https://bb98b9c488b7.ngrok-free.app/message/"+userId+"/"+channelIdObj;
+        const response = await fetch(sendMessageApi,{
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ "msg": msg}),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+            alert("failed to send message")
+        }
+        const data = await response.json();
+        addMessageToUI(data.msg); // add immediately to UI
+        input.value = "";       // clear input
+    }
+    
+    async function myFunction(receiverName) {
+        // check if channel exist else create it
+        //   alert(`You selected: ${username}`);
+        // your logic here
+        const creatChannelApi = "https://bb98b9c488b7.ngrok-free.app/channel/"+userName+"/"+receiverName;
+        const response = await fetch(creatChannelApi);
+        const data = await response.json();
+        console.log(data)
+
+        const container = document.getElementById("messages");
+        container.innerHTML = ""; // clear previous messages
+
+        // Handle array or single object response
+        const messages = Array.isArray(data) ? data : [data];
+
+        messages.forEach(msg => {
+          console.log("set channelIdObj to msg.channel_id = ",msg.channel_id)
+          console.log("msg.msg = ",msg.msg)
+          addMessageToUI(msg.msg)
+          channelIdObj = msg.channel_id;
+
+        //   const msgDiv = document.createElement("div");
+        //   msgDiv.classList.add("message");
+
+        //   const text = document.createElement("div");
+        //   text.textContent = msg.msg;
+
+        //   const ts = document.createElement("div");
+        //   ts.classList.add("timestamp");
+        //   ts.textContent = new Date(msg.created_at).toLocaleString();
+
+        //   msgDiv.appendChild(text);
+        //   msgDiv.appendChild(ts);
+        //   container.appendChild(msgDiv);
+        });
+    }
+
+
+    loadDropdown();
+
+       
+    </script>
+</body>
+</html>
